@@ -75,19 +75,17 @@ class Character:
                     self._fight_defense -= value
 
     def remove_inventory_item(self, item, quantity):
-        delete_item = False
-        for item_key, value in self._inventory.items():
-            if item_key == item:
-                if value == quantity:
-                    delete_item = True
-                else:
-                    self._inventory[item_key] -= quantity
-            else:
-                continue
-        if delete_item:
+        if quantity <= 0:
+            return False
+        if item not in self._inventory:
+            return False
+        if self._inventory[item] < quantity:
+            return False
+        if self._inventory[item] == quantity:
             del self._inventory[item]
         else:
-            pass
+            self._inventory[item] -= quantity
+        return True
 
     def attack(self, target):
         attack_power = random.randint(0, self._fight_strength)

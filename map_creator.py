@@ -36,7 +36,8 @@ def create_dungeon():
                  [zero, zero, room, zero, room]]
 
     dungeons = [dungeon_1, dungeon_2]
-    return random.choice(dungeons)
+    dungeon = random.choice(dungeons)
+    return [row[:] for row in dungeon]
 
 
 class Map:
@@ -195,8 +196,7 @@ class Map:
                 store.display()
                 setup.starting_character.playerinfo()
             elif choice == '7':
-                save.save_object(setup.starting_character, 'save_file.pkl')
-                save.save_object(setup.solar_system, 'solar_system.pkl')
+                save.save_game(setup.starting_character, setup.solar_system)
                 print("Game Save Successful!")
             elif choice == '8':
                 print("Leaving the world of galoo....")

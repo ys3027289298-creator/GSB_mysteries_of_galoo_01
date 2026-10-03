@@ -102,13 +102,14 @@ def fight(attacker, target):
                 attacker_turn = True
 
     if target._fight_health <= 0:
-        attacker.add_to_inventory(target._inventory)
+        attacker.add_to_inventory(dict(target._inventory))
         print()
         print("You Defeated %s" % target._name)
         sleep(2)
         print("You recieved %s's inventory" % target._name)
         for key, value in target._inventory.items():
             print(value, key)
+        target._inventory = {}
         sleep(2)
         attacker.add_experience_points()
         if attacker.check_level() == True:
