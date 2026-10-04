@@ -6,6 +6,8 @@ from character import *
 from game_items import *
 import setup
 
+STOCK_PER_ITEM = 10
+
 
 class Store:
     def __init__(self, classtype):
@@ -14,6 +16,8 @@ class Store:
         self._inventory = None
         self._in_store = True
         self._item = None
+        self._stock = {item._name: STOCK_PER_ITEM for item in
+                       [get_inventory_item(i) for i in range(1, 11)]}
 
     def generate_armory_item(self):
         new_armor_1 = get_armor(setup.starting_character._type)
@@ -47,21 +51,40 @@ class Store:
 
     def sell_inventory_item(self, item, quantity):
         self._item = item
+        if quantity <= 0:
+            print("Please select and enter a number from the items above")
+            return False
+        if not setup.starting_character.remove_inventory_item(self._item._name, quantity):
+            print("You do not have that many to sell")
+            return False
         self._item.zero()
         self._item.increment_quantity(quantity)
         price = self._item.get_price()
         setup.starting_character._inventory['Gold'] += price
+        setup.starting_character._gold += price
+        self._stock[self._item._name] += quantity
+        return True
 
     def buy_inventory_item(self, item, quantity):
         self._item = item
+        if quantity <= 0:
+            print("Please select and enter a number from the items above")
+            return False
+        if self._stock.get(self._item._name, 0) < quantity:
+            print("The store does not have that many in stock")
+            return False
         self._item.zero()
         self._item.increment_quantity(quantity)
         price = self._item.get_price()
         if setup.starting_character._inventory['Gold'] >= price:
             setup.starting_character._inventory['Gold'] -= price
+            setup.starting_character._gold -= price
             setup.starting_character.add_to_inventory(self._item.get_item())
+            self._stock[self._item._name] -= quantity
+            return True
         else:
             print("You do not have enough gold to purchase that item")
+            return False
 
 
 
@@ -97,20 +120,11 @@ class Store:
                     else:
                         index += 1
 
-            if index_indicator() == 1:
-                player_item = setup.new_equipment_1
-            elif index_indicator() == 2:
-                player_item = setup.new_equipment_2
-            elif index_indicator() == 3:
-                player_item = setup.new_equipment_3
-            elif index_indicator() == 4:
-                player_item = setup.new_equipment_4
-            elif index_indicator() == 5:
-                player_item = setup.new_equipment_5
-            elif index_indicator() == 6:
-                player_item = setup.new_equipment_6
-            elif index_indicator() == 7:
-                player_item = setup.new_equipment_7
+            if index_indicator() is None:
+                print("Your equipment is full and has no slot for that item")
+                return False
+
+            player_item = setup.starting_character._equipment[index_indicator() - 1]
 
             for item_name, attributes in player_item.items():
                 for attribute_name, attribute_value in attributes.items():
@@ -120,12 +134,16 @@ class Store:
             setup.starting_character.remove_item(player_item, index_indicator() - 1)
             setup.starting_character.equip(self._item, index_indicator() - 1)
             setup.starting_character._inventory['Gold'] -= gold_value
+            setup.starting_character._gold -= gold_value
             setup.starting_character._inventory['Gold'] += player_item_worth
+            setup.starting_character._gold += player_item_worth
+            return True
 
 
 
         else:
             print("You dont have enought gold yet")
+            return False
 
     def display(self):
         choice = None
@@ -268,7 +286,6 @@ Happy Hunting! (press x to exit)""")
                         try:
                             item = input("Choice of Item ex...(Health Potion): ")
                             quantity = int(input("Quantity to remove ex..(2, 3, 4): "))
-                            setup.starting_character.remove_inventory_item(item, quantity)
                             if item == 'Health Potion':
                                 item = get_inventory_item(1)
                             elif item == 'Defense Potion':
@@ -289,6 +306,9 @@ Happy Hunting! (press x to exit)""")
                                 item = get_inventory_item(9)
                             elif item == 'Dust':
                                 item = get_inventory_item(10)
+                            else:
+                                print("Try again")
+                                continue
                             self.sell_inventory_item(item, quantity)
                             print("Transaction Completed")
                             print()

@@ -5,6 +5,8 @@
 import random
 from time import sleep
 
+EQUIPMENT_SLOTS = 7
+
 
 class Character:
     def __init__(self, setup_new, name):
@@ -37,11 +39,15 @@ class Character:
         self._experience_to_go = 2000
         self._experience_cap = 2000
         self._level = 1
+        self._loot_claimed = False
 
     def equip(self, game_item, position):
+        if position >= len(self._equipment) \
+                and len(self._equipment) >= EQUIPMENT_SLOTS:
+            return False
         self._game_item = game_item
+        self._equipment.insert(position, game_item)
         for key, value in self._game_item.items():
-            self._equipment.insert(position, game_item)
             for key, value in value.items():
                 if key == 'Strength':
                     self._strength_weapon += value
@@ -55,11 +61,12 @@ class Character:
                 if key == 'Defense':
                     self._defense_weapon += value
                     self._fight_defense += value
+        return True
 
     def remove_item(self, game_item, position):
         self._game_item = game_item
+        self._equipment.pop(position)
         for item_key, value in self._game_item.items():
-            self._equipment.pop(position)
             for key, value in value.items():
                 if key == 'Strength':
                     self._strength_weapon -= value
@@ -73,21 +80,21 @@ class Character:
                 if key == 'Defense':
                     self._defense_weapon -= value
                     self._fight_defense -= value
+        return True
 
     def remove_inventory_item(self, item, quantity):
-        delete_item = False
-        for item_key, value in self._inventory.items():
-            if item_key == item:
-                if value == quantity:
-                    delete_item = True
-                else:
-                    self._inventory[item_key] -= quantity
-            else:
-                continue
-        if delete_item:
+        if quantity <= 0:
+            return False
+        if item not in self._inventory:
+            return False
+        if self._inventory[item] < quantity:
+            return False
+        self._inventory[item] -= quantity
+        if self._inventory[item] == 0:
             del self._inventory[item]
-        else:
-            pass
+        if item == 'Gold':
+            self._gold -= quantity
+        return True
 
     def attack(self, target):
         attack_power = random.randint(0, self._fight_strength)

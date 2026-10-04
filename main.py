@@ -100,14 +100,19 @@ def start_menu():
         intro()
         setup.solar_system = SolarSystem(solar_system)
         setup.solar_system.play_solar_system()
-    elif choice == '2' and path.exists('save_file.pkl') and path.exists('solar_system.pkl'):
-        setup.starting_character = save.reload_object('save_file.pkl')
+    elif choice == '2' and path.exists('save_file.pkl'):
+        try:
+            setup.starting_character, setup.solar_system = save.load_game('save_file.pkl')
+        except save.SaveError:
+            print("The save file is damaged or from an incompatible version")
+            time.sleep(0.6)
+            start_menu()
+            return
         print("Welcome Back to Galoo!")
         sleep(1)
         setup.starting_character.playerinfo()
         setup.armor_locator = 5
         setup_returning_character(setup.starting_character)
-        setup.solar_system = save.reload_object('solar_system.pkl')
         setup.solar_system.play_solar_system()
 
     else:
